@@ -1,0 +1,17 @@
+[project]
+name = "seagent"
+version = "0.1.0"
+description = "Self-Evovle Agent"
+authors = [
+    {name = "Ming Zhao",email = "jobine_cn@hotmail.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
