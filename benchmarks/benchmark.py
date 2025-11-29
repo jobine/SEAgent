@@ -1,0 +1,65 @@
+from __future__ import annotations
+
+import os
+from enum import Enum
+from abc import ABC, abstractmethod
+from typing import Any, List
+
+
+class Benchmark(ABC):
+    PASS = 'PASS'
+    FAIL = 'FAIL'
+
+    def __init__(self, name: str, data_folder):
+        self.name = name
+        self.data_folder = data_folder
+
+        self._train_data: List[dict] | None = None
+        self._validate_data: List[dict] | None = None
+        self._test_data: List[dict] | None = None
+
+        # if data folder does not exist, create it
+        os.makedirs(self.data_folder, exist_ok=True)
+
+        # Load the data
+        self.load_data()
+        
+    @abstractmethod
+    def load_data(self, force_reload: bool = False) -> None:
+        '''
+        Abstract method to download datasets if self.data_folder does not exist, then load data from `self.data_folder`, and assigned to _train_data/_validate_data/_test_data datasets.
+        '''
+        pass
+
+    @abstractmethod
+    async def evaluate(self, prediction: Any, label: Any) -> str:
+        '''
+        Abstract method to evaluate the given model on the benchmark dataset.
+        Should return either Benchmark.PASS or Benchmark.FAIL.
+        '''
+        pass
+
+    @property
+    def train_data(self) -> List[dict]:
+        if self._train_data is None:
+            raise ValueError("Train data not loaded. Please call load_data() first.")
+        return self._train_data
+    
+    @property
+    def validate_data(self) -> List[dict]:
+        if self._validate_data is None:
+            raise ValueError("Validate data not loaded. Please call load_data() first.")
+        return self._validate_data
+    
+    @property
+    def test_data(self) -> List[dict]:
+        if self._test_data is None:
+            raise ValueError("Test data not loaded. Please call load_data() first.")
+        return self._test_data
+
+
+class DatasetType(Enum):
+    TRAIN = 'train'
+    VALIDATE = 'validate'
+    TEST = 'test'
+    ALL = 'all'
