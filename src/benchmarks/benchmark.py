@@ -35,7 +35,7 @@ class Benchmark(ABC):
         pass
 
     @abstractmethod
-    async def evaluate(self, prediction: Any, label: Any) -> str:
+    async def evaluate(self, prediction: Any, label: Any) -> dict:
         '''
         Abstract method to evaluate the given model on the benchmark dataset.
         Should return either Benchmark.PASS or Benchmark.FAIL.

@@ -9,7 +9,9 @@ logger = get_logger(__name__)
 
 
 def download_file(url: str, destination_path: str, max_retries: int = 3, timeout: int = 10) -> None:
-    '''Download a file from a URL to a local destination.'''
+    '''
+    Download a file from a URL to a local destination.
+    '''
     
     # if destination directory does not exist, create it
     os.makedirs(os.path.dirname(destination_path), exist_ok=True)
@@ -56,7 +58,10 @@ def download_file(url: str, destination_path: str, max_retries: int = 3, timeout
 
 
 def load_json(file_path: str) -> list[dict] | dict:
-    '''Load a JSON or JSONL file and return its content as a list of dictionaries.'''
+    '''
+    Load a JSON or JSONL file and return its content as a list of dictionaries.
+    '''
+
     if not os.path.exists(file_path):
         raise FileNotFoundError(f'File not found: {file_path}')
     data = []
