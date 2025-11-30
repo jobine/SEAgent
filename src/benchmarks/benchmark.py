@@ -5,6 +5,9 @@ from enum import Enum
 from abc import ABC, abstractmethod
 from typing import Any, List
 
+from src.utils import get_logger
+
+logger = get_logger(__name__)
 
 class Benchmark(ABC):
     PASS = 'PASS'
@@ -42,19 +45,22 @@ class Benchmark(ABC):
     @property
     def train_data(self) -> List[dict]:
         if self._train_data is None:
-            raise ValueError("Train data not loaded. Please call load_data() first.")
+            logger.error("Train data not loaded. Please call load_data() first.")
+            # raise ValueError("Train data not loaded. Please call load_data() first.")
         return self._train_data
     
     @property
     def validate_data(self) -> List[dict]:
         if self._validate_data is None:
-            raise ValueError("Validate data not loaded. Please call load_data() first.")
+            logger.error("Validate data not loaded. Please call load_data() first.")
+            # raise ValueError("Validate data not loaded. Please call load_data() first.")
         return self._validate_data
     
     @property
     def test_data(self) -> List[dict]:
         if self._test_data is None:
-            raise ValueError("Test data not loaded. Please call load_data() first.")
+            logger.error("Test data not loaded. Please call load_data() first.")
+            # raise ValueError("Test data not loaded. Please call load_data() first.")
         return self._test_data
 
 
