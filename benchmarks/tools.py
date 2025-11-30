@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 logger = get_logger(__name__)
 
+
 def download_file(url: str, destination_path: str, max_retries: int = 3, timeout: int = 10) -> None:
     '''Download a file from a URL to a local destination.'''
     
@@ -48,12 +49,13 @@ def download_file(url: str, destination_path: str, max_retries: int = 3, timeout
                 logger.info(f'Retrying downloading {url}...')
 
     response = requests.get(url, timeout=timeout)
-    response.raise_for_status()  # Ensure we notice bad responses
+    response.raise_for_status()
 
     with open(destination_path, 'wb') as f:
         f.write(response.content)
 
-def loads_json(file_path: str) -> list[dict] | dict:
+
+def load_json(file_path: str) -> list[dict] | dict:
     '''Load a JSON or JSONL file and return its content as a list of dictionaries.'''
     if not os.path.exists(file_path):
         raise FileNotFoundError(f'File not found: {file_path}')
