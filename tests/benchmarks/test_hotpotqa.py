@@ -5,8 +5,8 @@ import tempfile
 import pytest
 from unittest.mock import patch
 
-from benchmarks.hotpotqa import HotpotQA
-from benchmarks.benchmark import DatasetType
+from src.benchmarks.hotpotqa import HotpotQA
+from src.benchmarks.benchmark import DatasetType
 
 
 class TestHotpotQA:
@@ -69,8 +69,8 @@ class TestHotpotQA:
 
     def test_init_default_data_folder(self, mock_benchmarks_json, mock_train_data, mock_validate_data):
         """Test HotpotQA initialization with default data folder."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             def load_json_side_effect(path):
@@ -91,8 +91,8 @@ class TestHotpotQA:
 
     def test_init_custom_data_folder(self, temp_data_folder, mock_benchmarks_json, mock_train_data, mock_validate_data):
         """Test HotpotQA initialization with custom data folder."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             def load_json_side_effect(path):
@@ -113,8 +113,8 @@ class TestHotpotQA:
 
     def test_init_with_train_dataset_type(self, temp_data_folder, mock_benchmarks_json, mock_train_data):
         """Test HotpotQA initialization with TRAIN dataset type only."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             def load_json_side_effect(path):
@@ -134,8 +134,8 @@ class TestHotpotQA:
 
     def test_init_with_validate_dataset_type(self, temp_data_folder, mock_benchmarks_json, mock_validate_data):
         """Test HotpotQA initialization with VALIDATE dataset type only."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             def load_json_side_effect(path):
@@ -155,8 +155,8 @@ class TestHotpotQA:
 
     def test_load_data_downloads_when_file_not_exists(self, temp_data_folder, mock_benchmarks_json, mock_train_data):
         """Test that load_data downloads files when they don't exist."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=False):
             
             def load_json_side_effect(path):
@@ -173,8 +173,8 @@ class TestHotpotQA:
 
     def test_load_data_skips_download_when_file_exists(self, temp_data_folder, mock_benchmarks_json, mock_train_data):
         """Test that load_data skips download when files already exist."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             def load_json_side_effect(path):
@@ -191,8 +191,8 @@ class TestHotpotQA:
 
     def test_load_data_force_reload(self, temp_data_folder, mock_benchmarks_json, mock_train_data):
         """Test that load_data with force_reload=True re-downloads files."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             call_count = [0]
@@ -217,8 +217,8 @@ class TestHotpotQA:
 
     def test_load_data_benchmark_not_found(self, temp_data_folder):
         """Test that load_data raises ValueError when benchmark is not in benchmarks.json."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download:
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download:
             
             # Return empty benchmarks.json (no hotpotqa entry)
             mock_load_json.return_value = {}
@@ -228,8 +228,8 @@ class TestHotpotQA:
 
     def test_train_data_property(self, temp_data_folder, mock_benchmarks_json, mock_train_data, mock_validate_data):
         """Test train_data property returns correct data."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             def load_json_side_effect(path):
@@ -250,8 +250,8 @@ class TestHotpotQA:
 
     def test_validate_data_property(self, temp_data_folder, mock_benchmarks_json, mock_train_data, mock_validate_data):
         """Test validate_data property returns correct data."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             def load_json_side_effect(path):
@@ -272,8 +272,8 @@ class TestHotpotQA:
 
     def test_train_data_property_raises_when_not_loaded(self, temp_data_folder, mock_benchmarks_json, mock_validate_data):
         """Test train_data property raises ValueError when not loaded."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             def load_json_side_effect(path):
@@ -293,8 +293,8 @@ class TestHotpotQA:
 
     def test_test_data_property_raises_when_not_loaded(self, temp_data_folder, mock_benchmarks_json, mock_train_data):
         """Test test_data property raises ValueError when not loaded (hotpotqa has no test set)."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             def load_json_side_effect(path):
@@ -313,8 +313,8 @@ class TestHotpotQA:
 
     def test_load_data_with_none_dataset(self, temp_data_folder, mock_benchmarks_json, mock_train_data):
         """Test _load_data returns None when dataset is None."""
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             def load_json_side_effect(path):
@@ -348,8 +348,8 @@ class TestHotpotQAEvaluate:
         }
         mock_train_data = [{"question": "test", "answer": "test"}]
         
-        with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-             patch('benchmarks.hotpotqa.download_file') as mock_download, \
+        with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+             patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
             
             def load_json_side_effect(path):
@@ -377,8 +377,8 @@ class TestHotpotQAIntegration:
         with tempfile.TemporaryDirectory() as tmpdir:
             test_folder = os.path.join(tmpdir, 'new_folder', 'benchmarks')
             
-            with patch('benchmarks.hotpotqa.load_json') as mock_load_json, \
-                 patch('benchmarks.hotpotqa.download_file'):
+            with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
+                 patch('src.benchmarks.hotpotqa.download_file'):
                 
                 # Mock load_json to return train data on second call
                 mock_load_json.side_effect = [

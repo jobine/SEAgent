@@ -14,7 +14,9 @@ class HotpotQA(Benchmark):
 
     def load_data(self, force_reload: bool = False) -> None:
         name = type(self).__name__.lower()
-        benchmarks = load_json('benchmarks/benchmarks.json')
+        # Get the directory where this module is located
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        benchmarks = load_json(os.path.join(module_dir, 'benchmarks.json'))
 
         if name in benchmarks:
             # Implement data loading logic here
@@ -49,10 +51,3 @@ class HotpotQA(Benchmark):
         
     async def evaluate(self, prediction: str, label: str) -> str:
         pass
-
-
-if __name__ == '__main__':
-    hotpotqa = HotpotQA()
-
-    import json
-    print(json.dumps(hotpotqa.train_data[:1], indent=2))

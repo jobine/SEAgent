@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-from utils import get_logger
+from src.utils import get_logger
 from tqdm import tqdm
 
 
