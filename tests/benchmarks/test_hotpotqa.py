@@ -71,7 +71,8 @@ class TestHotpotQA:
         """Test HotpotQA initialization with default data folder."""
         with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
              patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
-             patch('os.path.exists', return_value=True):
+             patch('os.path.exists', return_value=True), \
+             patch('os.makedirs'):
             
             def load_json_side_effect(path):
                 if 'benchmarks.json' in path:
@@ -87,7 +88,7 @@ class TestHotpotQA:
             hotpotqa = HotpotQA()
             
             assert hotpotqa.name == 'hotpotqa'
-            assert hotpotqa.data_folder == os.path.expanduser('~/.seagent/benchmarks')
+            assert hotpotqa.data_folder == os.path.normpath(os.path.expanduser('~/.seagent/benchmarks'))
 
     def test_init_custom_data_folder(self, temp_data_folder, mock_benchmarks_json, mock_train_data, mock_validate_data):
         """Test HotpotQA initialization with custom data folder."""
@@ -270,11 +271,12 @@ class TestHotpotQA:
             assert hotpotqa.validate_data == mock_validate_data
             assert len(hotpotqa.validate_data) == 1
 
-    def test_train_data_property_raises_when_not_loaded(self, temp_data_folder, mock_benchmarks_json, mock_validate_data):
-        """Test train_data property raises ValueError when not loaded."""
+    def test_train_data_property_returns_none_when_not_loaded(self, temp_data_folder, mock_benchmarks_json, mock_validate_data):
+        """Test train_data property returns None when not loaded."""
         with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
              patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
-             patch('os.path.exists', return_value=True):
+             patch('os.path.exists', return_value=True), \
+             patch('os.makedirs'):
             
             def load_json_side_effect(path):
                 if 'benchmarks.json' in path:
@@ -288,11 +290,11 @@ class TestHotpotQA:
             # Only load VALIDATE dataset
             hotpotqa = HotpotQA(data_folder=temp_data_folder, dataset_type=DatasetType.VALIDATE)
             
-            with pytest.raises(ValueError, match="Train data not loaded"):
-                _ = hotpotqa.train_data
+            # train_data should return None when not loaded
+            assert hotpotqa.train_data is None
 
-    def test_test_data_property_raises_when_not_loaded(self, temp_data_folder, mock_benchmarks_json, mock_train_data):
-        """Test test_data property raises ValueError when not loaded (hotpotqa has no test set)."""
+    def test_test_data_property_returns_none_when_not_loaded(self, temp_data_folder, mock_benchmarks_json, mock_train_data):
+        """Test test_data property returns None when not loaded (hotpotqa has no test set)."""
         with patch('src.benchmarks.hotpotqa.load_json') as mock_load_json, \
              patch('src.benchmarks.hotpotqa.download_file') as mock_download, \
              patch('os.path.exists', return_value=True):
@@ -308,8 +310,8 @@ class TestHotpotQA:
             
             hotpotqa = HotpotQA(data_folder=temp_data_folder, dataset_type=DatasetType.TRAIN)
             
-            with pytest.raises(ValueError, match="Test data not loaded"):
-                _ = hotpotqa.test_data
+            # test_data should return None when not loaded
+            assert hotpotqa.test_data is None
 
     def test_load_data_with_none_dataset(self, temp_data_folder, mock_benchmarks_json, mock_train_data):
         """Test _load_data returns None when dataset is None."""

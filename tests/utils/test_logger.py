@@ -137,6 +137,9 @@ class TestSetupLogging:
 
     def _restore_handlers(self, root_logger, original_handlers, original_level):
         """Restore original handlers."""
+        # Close all current handlers before clearing (important for FileHandler on Windows)
+        for h in root_logger.handlers:
+            h.close()
         root_logger.handlers.clear()
         for h in original_handlers:
             root_logger.addHandler(h)
@@ -190,6 +193,11 @@ class TestSetupLogging:
                 handler_types = [type(h) for h in root_logger.handlers]
                 assert logging.StreamHandler in handler_types
                 assert logging.FileHandler in handler_types
+                
+                # Close handlers before exiting temp directory context (Windows file locking)
+                for h in root_logger.handlers:
+                    h.close()
+                root_logger.handlers.clear()
         finally:
             self._restore_handlers(root_logger, original_handlers, original_level)
 
@@ -207,6 +215,11 @@ class TestSetupLogging:
                 setup_logging(log_file=log_file)
                 
                 assert os.path.exists(log_dir)
+                
+                # Close handlers before exiting temp directory context (Windows file locking)
+                for h in root_logger.handlers:
+                    h.close()
+                root_logger.handlers.clear()
         finally:
             self._restore_handlers(root_logger, original_handlers, original_level)
 
@@ -254,6 +267,11 @@ class TestSetupLogging:
                 # Should be standard Formatter, not ColoredFormatter
                 assert isinstance(file_handler.formatter, logging.Formatter)
                 assert not isinstance(file_handler.formatter, ColoredFormatter)
+                
+                # Close handlers before exiting temp directory context (Windows file locking)
+                for h in root_logger.handlers:
+                    h.close()
+                root_logger.handlers.clear()
         finally:
             self._restore_handlers(root_logger, original_handlers, original_level)
 
@@ -278,6 +296,11 @@ class TestSetupLogging:
                 
                 assert 'Test log message' in content
                 assert 'test_write' in content
+                
+                # Close handlers before exiting temp directory context (Windows file locking)
+                for h in root_logger.handlers:
+                    h.close()
+                root_logger.handlers.clear()
         finally:
             self._restore_handlers(root_logger, original_handlers, original_level)
 
@@ -342,6 +365,9 @@ class TestLoggerIntegration:
 
     def _restore_handlers(self, root_logger, original_handlers, original_level):
         """Restore original handlers."""
+        # Close all current handlers before clearing (important for FileHandler on Windows)
+        for h in root_logger.handlers:
+            h.close()
         root_logger.handlers.clear()
         for h in original_handlers:
             root_logger.addHandler(h)
@@ -380,6 +406,11 @@ class TestLoggerIntegration:
                 assert 'module.one.integ_test' in content
                 assert 'module.two.integ_test' in content
                 assert 'Debug message' not in content  # Should be filtered out
+                
+                # Close handlers before exiting temp directory context (Windows file locking)
+                for handler in root_logger.handlers:
+                    handler.close()
+                root_logger.handlers.clear()
         finally:
             self._restore_handlers(root_logger, original_handlers, original_level)
 
@@ -417,8 +448,11 @@ class TestLoggerIntegration:
                 with open(log_file1, 'r') as f:
                     assert 'First message' in f.read()
                 
-                # Reset and setup again
+                # Close and reset handlers before setting up again
+                for h in root_logger.handlers:
+                    h.close()
                 root_logger.handlers.clear()
+                
                 log_file2 = os.path.join(tmpdir, 'log2.log')
                 setup_logging(log_file=log_file2)
                 
@@ -431,6 +465,11 @@ class TestLoggerIntegration:
                     content = f.read()
                     assert 'Second message' in content
                     assert 'First message' not in content
+                
+                # Close handlers before exiting temp directory context (Windows file locking)
+                for handler in root_logger.handlers:
+                    handler.close()
+                root_logger.handlers.clear()
         finally:
             self._restore_handlers(root_logger, original_handlers, original_level)
 
@@ -442,7 +481,7 @@ class TestModuleLevelSetup:
         """Test that _default_log_path is properly configured."""
         from src.utils import logger as logger_module
         
-        expected_path = os.path.join(os.path.expanduser('~/.seagent/logs'), 'seagent.log')
+        expected_path = os.path.normpath(os.path.join(os.path.expanduser('~'), '.seagent', 'logs', 'seagent.log'))
         assert logger_module._default_log_path == expected_path
 
     def test_module_auto_initializes_logging(self):

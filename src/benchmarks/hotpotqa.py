@@ -8,7 +8,7 @@ class HotpotQA(Benchmark):
     def __init__(self, data_folder: str = None, dataset_type: DatasetType = DatasetType.ALL):
         self.dataset_type = dataset_type
 
-        location = os.path.expanduser(data_folder or '~/.seagent/benchmarks')
+        location = os.path.normpath(os.path.expanduser(data_folder or '~/.seagent/benchmarks'))
         super().__init__(name=type(self).__name__.lower(), data_folder=location)
 
     def load_data(self, force_reload: bool = False) -> None:

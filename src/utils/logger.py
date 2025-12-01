@@ -74,7 +74,7 @@ def get_logger(name: str) -> Logger:
 
 
 # Default log path
-_default_log_path = os.path.join(os.path.expanduser('~/.seagent/logs'), 'seagent.log')
+_default_log_path = os.path.normpath(os.path.join(os.path.expanduser('~'), '.seagent', 'logs', 'seagent.log'))
 
 # For convenience, setup logging when this module is imported
 # You can also call setup_logging() explicitly in your main.py for more control
