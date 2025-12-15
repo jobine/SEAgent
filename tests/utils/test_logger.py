@@ -1,11 +1,12 @@
 """Unit tests for utils.logger module."""
 
+import io
 import os
 import logging
 import tempfile
 import pytest
 
-from src.utils.logger import ColoredFormatter, setup_logging, get_logger
+from src.utils.logger import ColoredFormatter, setup_logging, get_logger, suppress_logging
 
 
 class TestColoredFormatter:
@@ -411,6 +412,75 @@ class TestLoggerIntegration:
                 for handler in root_logger.handlers:
                     handler.close()
                 root_logger.handlers.clear()
+        finally:
+            self._restore_handlers(root_logger, original_handlers, original_level)
+
+
+class TestSuppressLogging:
+    """Tests for suppress_logging context manager."""
+
+    def _save_and_clear_handlers(self):
+        """Save current handlers and clear them."""
+        root_logger = logging.getLogger()
+        original_handlers = root_logger.handlers.copy()
+        original_level = root_logger.level
+        root_logger.handlers.clear()
+        return root_logger, original_handlers, original_level
+
+    def _restore_handlers(self, root_logger, original_handlers, original_level):
+        """Restore original handlers."""
+        for handler in root_logger.handlers:
+            handler.close()
+        root_logger.handlers.clear()
+        for handler in original_handlers:
+            root_logger.addHandler(handler)
+        root_logger.setLevel(original_level)
+
+    def test_suppress_logging_filters_messages(self):
+        """Warnings are suppressed inside context and level restored after."""
+        root_logger, original_handlers, original_level = self._save_and_clear_handlers()
+
+        try:
+            stream = io.StringIO()
+            handler = logging.StreamHandler(stream)
+            handler.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
+            root_logger.addHandler(handler)
+            root_logger.setLevel(logging.DEBUG)
+
+            logger = get_logger('suppress.test')
+
+            with suppress_logging(logging.ERROR):
+                logger.warning('skip this warning')
+                logger.error('keep this error')
+
+            logger.warning('warning after restore')
+
+            for h in root_logger.handlers:
+                h.flush()
+
+            content = stream.getvalue()
+
+            assert 'skip this warning' not in content
+            assert 'keep this error' in content
+            assert 'warning after restore' in content
+        finally:
+            for h in root_logger.handlers:
+                h.close()
+            root_logger.handlers.clear()
+            self._restore_handlers(root_logger, original_handlers, original_level)
+
+    def test_suppress_logging_restores_on_exception(self):
+        """Log level is restored even if an exception is raised inside context."""
+        root_logger, original_handlers, original_level = self._save_and_clear_handlers()
+
+        try:
+            root_logger.setLevel(logging.INFO)
+
+            with pytest.raises(ValueError):
+                with suppress_logging(logging.CRITICAL):
+                    raise ValueError('boom')
+
+            assert root_logger.level == logging.INFO
         finally:
             self._restore_handlers(root_logger, original_handlers, original_level)
 

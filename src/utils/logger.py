@@ -16,6 +16,7 @@
 
 import os
 import logging
+from contextlib import contextmanager
 from logging import Logger
 
 class ColoredFormatter(logging.Formatter):
@@ -71,6 +72,24 @@ def get_logger(name: str) -> Logger:
     Make sure setup_logging() is called before using this.
     """
     return logging.getLogger(name)
+
+
+@contextmanager
+def suppress_logging(level: int = logging.ERROR, logger: Logger | None = None):
+    """
+    Temporarily raise the log threshold to the specified level within a context.
+
+    Args:
+        level: Temporary log level to apply. Messages below this level are suppressed.
+        logger: Target logger. Defaults to the root logger when not provided.
+    """
+    target_logger = logger or logging.getLogger()
+    original_level = target_logger.level
+    target_logger.setLevel(level)
+    try:
+        yield
+    finally:
+        target_logger.setLevel(original_level)
 
 
 # Default log path
