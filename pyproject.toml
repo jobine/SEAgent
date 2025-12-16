@@ -12,6 +12,9 @@ dependencies = [
     "requests",
     "tqdm",
     "openai",
+    "google-genai",
+    "google-genai[aiohttp]",
+    "pydantic>=2.0.0",
 ]
 
 [project.optional-dependencies]

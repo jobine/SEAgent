@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import json
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, ClassVar, Dict
+from typing import Any, ClassVar, Dict, Type
 
 from openai import AsyncOpenAI
-
+from google import genai
 
 @dataclass
 class LLMConfig:
@@ -64,17 +65,28 @@ class LLMConfig:
 		return instance
 
 
-class AsyncLLM:
-	'''Async wrapper around HTTP LLM calls using JSON-defined config.'''
+class AsyncBaseLLM(ABC):
+	'''Abstract base class for async LLM implementations.'''
+
+	def __init__(self, config: LLMConfig) -> None:
+		self.config = config
+
+	@abstractmethod
+	async def __call__(self, prompt: str, **kwargs: Any) -> str:
+		'''Call the LLM asynchronously and return text.'''
+		...
+
+
+class AsyncOpenAILLM(AsyncBaseLLM):
+	'''Async wrapper for OpenAI-compatible APIs.'''
 
 	def __init__(
 		self,
-		model: str,
+		config: LLMConfig,
 		*,
-		config_path: str | Path | None = None,
 		client: AsyncOpenAI | None = None,
 	) -> None:
-		self.config = LLMConfig.load(model, path=config_path)
+		super().__init__(config)
 		self._client = client or AsyncOpenAI(
 			api_key=self.config.api_key or None,
 			base_url=self.config.base_url or None,
@@ -113,15 +125,125 @@ class AsyncLLM:
 				return str(text)
 
 		raise ValueError('LLM response missing generated content')
-	
+
+
+class AsyncGeminiLLM(AsyncBaseLLM):
+	'''Async wrapper for Google Gemini API.'''
+
+	def __init__(
+		self,
+		config: LLMConfig,
+		*,
+		client: genai.Client | None = None,
+	) -> None:
+		super().__init__(config)
+		self._client = client or genai.Client(api_key=self.config.api_key or None)
+
+	async def __call__(self, prompt: str, **kwargs: Any) -> str:
+		'''Call the Gemini LLM asynchronously and return text.'''
+		payload: Dict[str, Any] = {
+			'model': self.config.name,
+			'contents': prompt,
+		}
+
+		# Build generation config
+		config_dict: Dict[str, Any] = {}
+		if self.config.temperature is not None:
+			config_dict['temperature'] = self.config.temperature
+		if self.config.top_p is not None:
+			config_dict['top_p'] = self.config.top_p
+
+		payload_override: Dict[str, Any] = kwargs.pop('payload_override', {})
+		config_dict.update(payload_override.pop('config', {}))
+
+		if config_dict:
+			payload['config'] = genai.types.GenerateContentConfig(**config_dict)
+
+		payload.update(payload_override)
+
+		async with self._client.aio as aio_client:
+			response = await aio_client.models.generate_content(**payload)
+
+		return self._extract_content(response)
+
+	@staticmethod
+	def _extract_content(response: Any) -> str:
+		# Handle Gemini response structure
+		if hasattr(response, 'text') and response.text:
+			return str(response.text)
+
+		if hasattr(response, 'candidates') and response.candidates:
+			candidate = response.candidates[0]
+			if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+				parts = candidate.content.parts
+				if parts and hasattr(parts[0], 'text'):
+					return str(parts[0].text)
+
+		raise ValueError('Gemini response missing generated content')
+
+
+class AsyncLLM:
+	'''Factory class for creating async LLM instances based on provider.'''
+
+	_provider_registry: ClassVar[Dict[str, Type[AsyncBaseLLM]]] = {
+		'openai': AsyncOpenAILLM,
+		'azure': AsyncOpenAILLM,
+		'azure_openai': AsyncOpenAILLM,
+		'gemini': AsyncGeminiLLM,
+		'google': AsyncGeminiLLM,
+	}
+
+	def __new__(
+		cls,
+		model: str,
+		*,
+		config_path: str | Path | None = None,
+		**kwargs: Any,
+	) -> AsyncBaseLLM:
+		'''Create an async LLM instance based on the provider in config.
+
+		Args:
+			model: Model key defined in the JSON file.
+			config_path: Optional override path to the JSON config file.
+			**kwargs: Additional arguments passed to the LLM implementation.
+
+		Returns:
+			AsyncBaseLLM instance (AsyncOpenAILLM or AsyncGeminiLLM).
+		'''
+		config = LLMConfig.load(model, path=config_path)
+		provider = config.provider.lower()
+
+		llm_class = cls._provider_registry.get(provider)
+		if llm_class is None:
+			# Default to OpenAI-compatible API for unknown providers
+			llm_class = AsyncOpenAILLM
+
+		return llm_class(config, **kwargs)
+
+	@classmethod
+	def register_provider(cls, provider: str, llm_class: Type[AsyncBaseLLM]) -> None:
+		'''Register a custom LLM implementation for a provider.
+
+		Args:
+			provider: Provider name (case-insensitive).
+			llm_class: LLM class that extends AsyncBaseLLM.
+		'''
+		cls._provider_registry[provider.lower()] = llm_class
+
 
 if __name__ == '__main__':
 	# Example usage
 	import asyncio
 
 	async def main():
-		llm = AsyncLLM('gpt-4o-mini')
-		result = await llm('Hello, world!')
+		# OpenAI example
+		openai_llm = AsyncLLM('gpt-4o-mini')
+		result = await openai_llm('Hello, world!')
+		print(result)
+
+		# Gemini example (uncomment if configured)
+		gemini_llm = AsyncLLM('gemini-3-pro-preview')
+		result = await gemini_llm('Hello from Gemini!')
 		print(result)
 
 	asyncio.run(main())
