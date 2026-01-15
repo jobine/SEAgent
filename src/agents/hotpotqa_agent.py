@@ -130,7 +130,7 @@ class HotpotQAAgent(Agent):
                 })
                 
                 if self.config.verbose:
-                    logger.info(f'[OK] Final Answer: {answer}')
+                    logger.info(f'✅ Final Answer: {answer}')
             else:
                 # Continue reasoning
                 state = state.model_copy(update={
@@ -138,7 +138,7 @@ class HotpotQAAgent(Agent):
                 })
                 
                 if self.config.verbose:
-                    logger.info(f'→ Reasoning: {response[:100]}...')
+                    logger.info(f'🤔 Reasoning: {response[:100]}...')
                 
         except Exception as e:
             logger.error(f'Error in agent step: {e}')

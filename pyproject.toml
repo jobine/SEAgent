@@ -12,6 +12,7 @@ dependencies = [
     "requests",
     "tqdm",
     "openai",
+    "ollama",
     "google-genai",
     "google-genai[aiohttp]",
     "pydantic>=2.0.0",

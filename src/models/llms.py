@@ -1,7 +1,5 @@
 '''Async LLM helpers backed by JSON configuration.'''
 
-from __future__ import annotations
-
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -10,6 +8,8 @@ from typing import Any, ClassVar, Dict, Type
 
 from openai import AsyncOpenAI
 from google import genai
+from ollama import AsyncClient as AsyncOllama
+
 
 @dataclass
 class LLMConfig:
@@ -127,6 +127,86 @@ class AsyncOpenAILLM(AsyncBaseLLM):
 		raise ValueError('LLM response missing generated content')
 
 
+class AsyncOllamaLLM(AsyncBaseLLM):
+	'''Async wrapper for Ollama local models using official SDK with proxy bypass.'''
+
+	def __init__(
+		self,
+		config: LLMConfig,
+		*,
+		client: AsyncOllama | None = None,
+	) -> None:
+		super().__init__(config)
+
+		if client:
+			self._client = client
+		else:
+			# Parse host from base_url if provided, otherwise use default localhost:11434
+			host = 'http://localhost:11434'
+			if self.config.base_url:
+				# Remove /v1 suffix if present (OpenAI compatibility endpoint)
+				host = self.config.base_url.rstrip('/').removesuffix('/v1')
+			
+			# Set NO_PROXY to bypass system proxy for localhost
+			import os
+			no_proxy = os.environ.get('NO_PROXY', '')
+			if 'localhost' not in no_proxy and '127.0.0.1' not in no_proxy:
+				entries = [e for e in no_proxy.split(',') if e]
+				entries.extend(['localhost', '127.0.0.1'])
+				os.environ['NO_PROXY'] = ','.join(entries)
+			
+			self._client = AsyncOllama(host=host)
+
+	async def __call__(self, prompt: str, **kwargs: Any) -> str:
+		'''Call Ollama LLM asynchronously using official SDK and return text.'''
+		# Build options dict for Ollama
+		options: Dict[str, Any] = {}
+		if self.config.temperature is not None:
+			options['temperature'] = self.config.temperature
+		if self.config.top_p is not None:
+			options['top_p'] = self.config.top_p
+		
+		# Allow override from kwargs
+		options_override: Dict[str, Any] = kwargs.pop('options', {})
+		options.update(options_override)
+
+		# Build messages format
+		messages = [{'role': 'user', 'content': prompt}]
+		messages_override = kwargs.pop('messages', None)
+		if messages_override:
+			messages = messages_override
+
+		# Call Ollama chat API
+		response = await self._client.chat(
+			model=self.config.name,
+			messages=messages,
+			options=options if options else None,
+			**kwargs
+		)
+		
+		return self._extract_content(response)
+
+	@staticmethod
+	def _extract_content(response: Any) -> str:
+		'''Extract content from Ollama ChatResponse.'''
+		# Ollama SDK returns ChatResponse object with message.content attribute
+		if hasattr(response, 'message'):
+			message = response.message
+			if hasattr(message, 'content') and message.content:
+				return str(message.content)
+		
+		# Fallback for dict format
+		if isinstance(response, dict):
+			if 'message' in response:
+				msg = response['message']
+				if isinstance(msg, dict) and 'content' in msg:
+					return str(msg['content'])
+			if 'content' in response:
+				return str(response['content'])
+		
+		raise ValueError('Ollama response missing generated content')
+
+
 class AsyncGeminiLLM(AsyncBaseLLM):
 	'''Async wrapper for Google Gemini API.'''
 
@@ -189,6 +269,7 @@ class AsyncLLM:
 		'openai': AsyncOpenAILLM,
 		'azure': AsyncOpenAILLM,
 		'azure_openai': AsyncOpenAILLM,
+		'ollama': AsyncOllamaLLM,
 		'gemini': AsyncGeminiLLM,
 		'google': AsyncGeminiLLM,
 	}

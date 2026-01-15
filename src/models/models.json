@@ -13,5 +13,29 @@
         "api_key": "",
         "temperature": 1.0,
         "top_p": 0.95
+    },
+    "gpt-oss:20b": {
+        "provider": "ollama",
+        "description": "Local Ollama model gpt-oss:20b running on localhost.",
+        "base_url": "http://localhost:11434",
+        "api_key": "ollama",
+        "temperature": 1.0,
+        "top_p": 1.0
+    },
+    "llama3:8b": {
+        "provider": "ollama",
+        "description": "Local Ollama model llama3-8b running on localhost.",
+        "base_url": "http://localhost:11434",
+        "api_key": "ollama",
+        "temperature": 1.0,
+        "top_p": 1.0
+    },
+    "gemma:7b": {
+        "provider": "ollama",
+        "description": "Local Ollama model gemma running on localhost.",
+        "base_url": "http://localhost:11434",
+        "api_key": "ollama",
+        "temperature": 1.0,
+        "top_p": 1.0
     }
 }

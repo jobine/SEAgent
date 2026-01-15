@@ -20,7 +20,7 @@ async def example_simple_question():
     
     # Create adaptive agent
     config = AgentConfig(
-        model='gemini-3-pro-preview',
+        model='llama3:8b',
         max_steps=5,  # Allow multi-step, but agent will decide
         verbose=True
     )
@@ -53,7 +53,7 @@ async def example_complex_multihop_question():
     
     # Same agent configuration
     config = AgentConfig(
-        model='gemini-3-pro-preview',
+        model='gemma:7b',
         max_steps=5,
         verbose=True
     )
@@ -89,7 +89,7 @@ async def example_complex_multihop_question():
     
     # Show reasoning steps
     if agent.state and len(agent.state.steps) > 1:
-        print(f'\nReasoning process:')
+        print('\nReasoning process:')
         for i, step in enumerate(agent.state.steps, 1):
             if step.get('reasoning'):
                 print(f'  Step {i}: {step["reasoning"][:100]}...')

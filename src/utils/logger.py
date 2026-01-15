@@ -15,6 +15,8 @@
 #   logger.info("This will be logged with module name 'benchmarks.utils'")
 
 import os
+import io
+import sys
 import logging
 from contextlib import contextmanager
 from logging import Logger
@@ -51,8 +53,9 @@ def setup_logging(log_file: str = None, level: int = logging.DEBUG) -> None:
     
     root_logger.setLevel(level)
 
-    # Console handler with colored formatter
-    console_handler = logging.StreamHandler()
+    # Console handler with colored formatter and UTF-8 encoding with error replacement to handle all Unicode characters
+    stream = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    console_handler = logging.StreamHandler(stream)
     console_formatter = ColoredFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(console_formatter)
     root_logger.addHandler(console_handler)
@@ -60,7 +63,7 @@ def setup_logging(log_file: str = None, level: int = logging.DEBUG) -> None:
     # File handler with standard formatter
     if log_file:
         os.makedirs(os.path.dirname(log_file), exist_ok=True)
-        file_handler = logging.FileHandler(log_file)
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
         file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         file_handler.setFormatter(file_formatter)
         root_logger.addHandler(file_handler)
