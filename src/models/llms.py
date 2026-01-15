@@ -238,12 +238,12 @@ if __name__ == '__main__':
 	async def main():
 		# OpenAI example
 		openai_llm = AsyncLLM('gpt-4o-mini')
-		result = await openai_llm('Hello, world!')
+		result = await openai_llm('Hello, OpenAI!')
 		print(result)
 
 		# Gemini example (uncomment if configured)
 		gemini_llm = AsyncLLM('gemini-3-pro-preview')
-		result = await gemini_llm('Hello from Gemini!')
+		result = await gemini_llm('Hello, Gemini!')
 		print(result)
 
 	asyncio.run(main())

@@ -3,5 +3,9 @@
 #
 # Usage:
 #   from src.benchmarks.hotpotqa import HotpotQA
+#   from src.benchmarks.benchmark import Benchmark, DatasetType
 
-__all__ = ['HotpotQA']
+from .benchmark import Benchmark, DatasetType
+from .hotpotqa import HotpotQA
+
+__all__ = ['Benchmark', 'DatasetType', 'HotpotQA']

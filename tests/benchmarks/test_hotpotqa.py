@@ -364,11 +364,33 @@ class TestHotpotQAEvaluate:
             return HotpotQA(data_folder=str(tmp_path), dataset_type=DatasetType.TRAIN)
 
     @pytest.mark.asyncio
-    async def test_evaluate_returns_none(self, hotpotqa_instance):
-        """Test evaluate method (currently returns None as placeholder)."""
+    async def test_evaluate_exact_match(self, hotpotqa_instance):
+        """Test evaluate method with exact matching prediction and label."""
         result = await hotpotqa_instance.evaluate("Paris", "Paris")
-        # Currently evaluate is not implemented, returns None
-        assert result is None
+        
+        assert result is not None
+        assert 'em' in result
+        assert 'f1' in result
+        assert 'result' in result
+        assert result['em'] == 1.0
+        assert result['f1'] == 1.0
+        assert result['result'] == 'PASS'
+    
+    @pytest.mark.asyncio
+    async def test_evaluate_no_match(self, hotpotqa_instance):
+        """Test evaluate with no match."""
+        result = await hotpotqa_instance.evaluate("London", "Paris")
+        assert result['em'] == 0.0
+        assert result['f1'] == 0.0
+        assert result['result'] == 'FAIL'
+
+    @pytest.mark.asyncio
+    async def test_evaluate_partial_match(self, hotpotqa_instance):
+        """Test evaluate with partial match."""
+        result = await hotpotqa_instance.evaluate("Paris France", "Paris")
+        assert result['em'] == 0.0  # Not exact match
+        assert result['f1'] > 0.0  # But has some F1
+        assert result['result'] == 'FAIL'
 
 
 class TestHotpotQAIntegration:

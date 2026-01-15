@@ -13,7 +13,7 @@ class Benchmark(ABC):
     PASS = 'PASS'
     FAIL = 'FAIL'
 
-    def __init__(self, name: str, data_folder):
+    def __init__(self, name: str, data_folder: str):
         self.name = name
         self.data_folder = data_folder
 
@@ -35,6 +35,13 @@ class Benchmark(ABC):
         pass
 
     @abstractmethod
+    def load_dataset(self, dataset: dict | None, force_reload: bool = False) -> List[dict] | None:
+        '''
+        Abstract method to load a specific dataset (train/validate/test).
+        '''
+        pass
+
+    @abstractmethod
     async def evaluate(self, prediction: Any, label: Any) -> dict:
         '''
         Abstract method to evaluate the given model on the benchmark dataset.
@@ -42,24 +49,46 @@ class Benchmark(ABC):
         '''
         pass
 
+    @abstractmethod
+    async def run(
+        self,
+        callback: Any,
+        dataset: str = 'validate',
+        num_samples: int | None = None,
+        verbose: bool = False
+    ) -> dict:
+        '''
+        Abstract method to run the benchmark evaluation using the provided callback function.
+        
+        Args:
+            callback: The callback function to evaluate.
+            dataset: The dataset to use ('train', 'validate', 'test').
+            num_samples: Number of samples to evaluate (None for all).
+            verbose: Whether to print detailed logs.
+        
+        Returns:
+            Dictionary with aggregated metrics and individual results
+        '''
+        pass
+
     @property
-    def train_data(self) -> List[dict]:
+    def train_data(self) -> List[dict] | None:
         if self._train_data is None:
-            logger.error("Train data not loaded. Please call load_data() first.")
+            logger.error('Train data not loaded. Please call load_data() first.')
             # raise ValueError("Train data not loaded. Please call load_data() first.")
         return self._train_data
     
     @property
-    def validate_data(self) -> List[dict]:
+    def validate_data(self) -> List[dict] | None:
         if self._validate_data is None:
-            logger.error("Validate data not loaded. Please call load_data() first.")
+            logger.error('Validate data not loaded. Please call load_data() first.')
             # raise ValueError("Validate data not loaded. Please call load_data() first.")
         return self._validate_data
     
     @property
-    def test_data(self) -> List[dict]:
+    def test_data(self) -> List[dict] | None:
         if self._test_data is None:
-            logger.error("Test data not loaded. Please call load_data() first.")
+            logger.error('Test data not loaded. Please call load_data() first.')
             # raise ValueError("Test data not loaded. Please call load_data() first.")
         return self._test_data
 

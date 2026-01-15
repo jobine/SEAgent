@@ -4,15 +4,14 @@
         "description": "Provides access to OpenAI's language models including GPT-3 and GPT-4.",
         "base_url": "https://api.openai.com/v1",
         "api_key": "",
-        "temperature": 0.7,
+        "temperature": 1.0,
         "top_p": 1.0
     },
     "gemini-3-pro-preview": {
         "provider": "google",
         "description": "Access to Google's Gemini 3 Pro language model.",
-        "base_url": "https://api.generativeai.google.com/v1",
         "api_key": "",
-        "temperature": 0.7,
-        "top_p": 1.0
+        "temperature": 1.0,
+        "top_p": 0.95
     }
 }
