@@ -26,6 +26,12 @@ Analyze the question and available context carefully. You can either:
 1. If you can confidently answer the question now, respond with: 'Final Answer: [your answer]'
 2. If you need to reason through multiple pieces of information, explain your reasoning step by step
 
+IMPORTANT: When providing your Final Answer:
+- For yes/no questions: respond with ONLY 'yes' or 'no'
+- For name/entity questions: respond with ONLY the name or entity
+- Keep your answer concise and direct without extra explanation
+- Do not include reasoning or elaboration in the Final Answer line
+
 Think carefully about what information is needed and how to connect different facts.
 Then provide your response.'''
 
@@ -71,7 +77,7 @@ class HotpotQAAgent(Agent):
         # Run adaptive reasoning (may finish in 1 step for simple questions, or use multiple steps)
         for step_num in range(self.config.max_steps):
             if self.config.verbose:
-                logger.info(f'\n{"="*60}')
+                logger.info(f'{"="*60}')
                 logger.info(f'Step {step_num + 1}/{self.config.max_steps}')
                 logger.info(f'{"="*60}')
                 
@@ -79,7 +85,7 @@ class HotpotQAAgent(Agent):
             
             if self._state.finished:
                 if self.config.verbose and len(self._state.steps) > 1:
-                    logger.info(f'\n{"="*60}')
+                    logger.info(f'{"="*60}')
                     logger.info(f'Completed in {len(self._state.steps)} steps')
                     logger.info(f'{"="*60}')
                 break
@@ -201,7 +207,7 @@ class HotpotQAAgent(Agent):
             match = re.search(pattern, response, re.IGNORECASE | re.DOTALL)
             if match:
                 answer = match.group(1).strip()
-                # Clean up the answer - remove quotes and backslashes
+                # Only remove surrounding quotes if present
                 answer = answer.strip('\\"\'')
                 return True, answer
         

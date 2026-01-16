@@ -1,7 +1,7 @@
-"""Unit tests for evaluation utility functions."""
+"""Unit tests for measures utility functions."""
 
 import pytest
-from src.utils.eval import (
+from src.benchmarks.measures import (
     normalize_answer,
     f1_score,
     exact_match_score,

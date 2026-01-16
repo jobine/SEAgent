@@ -20,7 +20,7 @@ async def example_simple_question():
     
     # Create adaptive agent
     config = AgentConfig(
-        model='llama3:8b',
+        model='gpt-4o-mini',
         max_steps=5,  # Allow multi-step, but agent will decide
         verbose=True
     )
@@ -53,7 +53,7 @@ async def example_complex_multihop_question():
     
     # Same agent configuration
     config = AgentConfig(
-        model='gemma:7b',
+        model='gpt-4o-mini',
         max_steps=5,
         verbose=True
     )
@@ -108,7 +108,7 @@ async def example_adaptive_demonstration():
     print('Same agent configuration, different question complexities\n')
     
     config = AgentConfig(
-        model='gemini-3-pro-preview',
+        model='gpt-4o-mini',
         max_steps=5,
         verbose=False  # Less verbose for comparison
     )
@@ -175,7 +175,7 @@ async def example_benchmark_evaluation():
     
     # Create agent
     config = AgentConfig(
-        model='gemini-3-pro-preview',
+        model='gpt-4o-mini',
         max_steps=3,  # Allow some multi-step reasoning
         verbose=False
     )

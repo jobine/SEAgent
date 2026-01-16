@@ -98,3 +98,22 @@ class DatasetType(Enum):
     VALIDATE = 'validate'
     TEST = 'test'
     ALL = 'all'
+    
+    @classmethod
+    def from_value(cls, value: str, default: 'DatasetType' = VALIDATE) -> 'DatasetType':
+        '''
+        Get enum object by value (case-insensitive).
+        
+        Args:
+            value: Enum value string
+            default: Default value to return if not found
+            
+        Returns:
+            Corresponding enum object, or default if not found
+        '''
+        value_lower = value.lower()
+        for item in cls:
+            if item.value == value_lower:
+                return item
+        return default
+

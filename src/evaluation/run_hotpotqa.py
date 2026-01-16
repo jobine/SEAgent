@@ -2,7 +2,7 @@
 HotpotQA Benchmark Runner
 
 Example usage:
-    python -m src.run_hotpotqa --model gpt-4o-mini --num-samples 10 --verbose
+    python -m run_hotpotqa --model gpt-4o-mini --num-samples 10 --verbose
 '''
 
 import argparse
@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 
 
 async def run_benchmark(
-    model: str = 'gemini-3-pro-preview',
+    model: str = 'gpt-4o-mini',
     dataset: str = 'validate',
     num_samples: int | None = None,
     verbose: bool = False,
@@ -44,20 +44,18 @@ async def run_benchmark(
     logger.info(f'  Model: {model}')
     logger.info(f'  Dataset: {dataset}')
     logger.info(f'  Samples: {num_samples or "all"}')
+    logger.info(f'  Verbose: {verbose}')
+    logger.info(f'  Output file: {output_file or "none"}')
     
     # Initialize the benchmark
-    dataset_type = {
-        'train': DatasetType.TRAIN,
-        'validate': DatasetType.VALIDATE,
-        'test': DatasetType.TEST
-    }.get(dataset, DatasetType.VALIDATE)
+    dataset_type = DatasetType.from_value(dataset)
     
     benchmark = HotpotQA(dataset_type=dataset_type)
     
     # Initialize the agent
     config = AgentConfig(
         model=model,
-        max_steps=1,  # Single-step for basic agent
+        max_steps=5,  # Single-step for basic agent
         verbose=verbose
     )
     agent = HotpotQAAgent(config=config)
@@ -85,13 +83,13 @@ async def run_benchmark(
     
     # Print summary
     metrics = results['metrics']
-    logger.info('=' * 50)
+    logger.info('=' * 60)
     logger.info('Benchmark Results:')
     logger.info(f'  Exact Match (EM): {metrics["exact_match"]:.4f}')
     logger.info(f'  F1 Score: {metrics["f1"]:.4f}')
     logger.info(f'  Samples: {metrics["num_samples"]}')
     logger.info(f'  Passed: {metrics["num_passed"]}/{metrics["num_samples"]}')
-    logger.info('=' * 50)
+    logger.info('=' * 60)
     
     # Save results if output file specified
     if output_file:
@@ -108,9 +106,9 @@ def main():
     parser = argparse.ArgumentParser(description='Run HotpotQA benchmark')
     parser.add_argument(
         '--model', 
-        type=str, 
-        default='gemini-3-pro-preview',
-        help='LLM model to use (default: gemini-3-pro-preview)'
+        type=str,
+        default='gpt-4o-mini',
+        help='LLM model to use (default: gpt-4o-mini)'
     )
     parser.add_argument(
         '--dataset',
@@ -122,7 +120,8 @@ def main():
     parser.add_argument(
         '--num-samples',
         type=int,
-        default=None,
+        default=5,
+        # required=True,
         help='Number of samples to evaluate (default: all)'
     )
     parser.add_argument(

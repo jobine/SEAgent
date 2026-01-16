@@ -2,8 +2,9 @@ import os
 from typing import Any, List, Dict, Callable, Awaitable
 
 from .benchmark import Benchmark, DatasetType
+from .measures import exact_match_score, f1_score
 from .tools import load_json, download_file
-from src.utils import get_logger, f1_score, exact_match_score
+from src.utils import get_logger
 
 logger = get_logger(__name__)
 
