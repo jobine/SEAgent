@@ -14,7 +14,7 @@ from pathlib import Path
 from src.benchmarks.hotpotqa import HotpotQA
 from src.benchmarks.benchmark import DatasetType
 from src.agents.hotpotqa_agent import HotpotQAAgent
-from src.agents.base import AgentConfig
+from src.agents.agent import AgentConfig
 from src.utils import get_logger
 
 logger = get_logger(__name__)

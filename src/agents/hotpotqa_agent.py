@@ -8,7 +8,7 @@ from typing import Any, List
 from pydantic import Field, PrivateAttr
 
 from src.utils import get_logger
-from .base import Agent, AgentConfig, AgentState
+from .agent import Agent, AgentConfig, AgentState
 
 logger = get_logger(__name__)
 

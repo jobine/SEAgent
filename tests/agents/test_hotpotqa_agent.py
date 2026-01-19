@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from pydantic import ValidationError
 
 from src.agents.hotpotqa_agent import HotpotQAAgent
-from src.agents.base import AgentConfig, AgentState
+from src.agents.agent import AgentConfig, AgentState
 
 
 class TestHotpotQAAgent:
