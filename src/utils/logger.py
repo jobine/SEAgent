@@ -15,7 +15,6 @@
 #   logger.info("This will be logged with module name 'benchmarks.utils'")
 
 import os
-import io
 import sys
 import logging
 from contextlib import contextmanager
@@ -44,6 +43,10 @@ def setup_logging(log_file: str = None, level: int = logging.DEBUG) -> None:
     """
     Setup root logger with colored console output and optional file logging.
     Call this once at application startup.
+    
+    Note: For proper UTF-8 support on Windows, set environment variable:
+        PYTHONIOENCODING=utf-8
+    Or run Python with: python -X utf8
     """
     root_logger = logging.getLogger()
     
@@ -53,9 +56,8 @@ def setup_logging(log_file: str = None, level: int = logging.DEBUG) -> None:
     
     root_logger.setLevel(level)
 
-    # Console handler with colored formatter and UTF-8 encoding with error replacement to handle all Unicode characters
-    stream = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    console_handler = logging.StreamHandler(stream)
+    # Console handler with colored formatter
+    console_handler = logging.StreamHandler()
     console_formatter = ColoredFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(console_formatter)
     root_logger.addHandler(console_handler)

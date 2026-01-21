@@ -9,6 +9,7 @@ from typing import Any, ClassVar, Dict, Type
 from openai import AsyncOpenAI
 from google import genai
 from ollama import AsyncClient as AsyncOllama
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 
 @dataclass
@@ -92,6 +93,12 @@ class AsyncOpenAILLM(AsyncBaseLLM):
 			base_url=self.config.base_url or None,
 		)
 
+	@retry(
+		reraise=True,
+		stop=stop_after_attempt(3),
+		wait=wait_exponential(multiplier=1, min=1, max=10),
+		retry=retry_if_exception_type(Exception),
+	)
 	async def __call__(self, prompt: str, **kwargs: Any) -> str:
 		'''Call the LLM asynchronously via OpenAI Chat Completions API and return text.'''
 		payload: Dict[str, Any] = {
@@ -157,6 +164,12 @@ class AsyncOllamaLLM(AsyncBaseLLM):
 			
 			self._client = AsyncOllama(host=host)
 
+	@retry(
+		reraise=True,
+		stop=stop_after_attempt(3),
+		wait=wait_exponential(multiplier=1, min=1, max=10),
+		retry=retry_if_exception_type(Exception),
+	)
 	async def __call__(self, prompt: str, **kwargs: Any) -> str:
 		'''Call Ollama LLM asynchronously using official SDK and return text.'''
 		# Build options dict for Ollama
@@ -219,6 +232,12 @@ class AsyncGeminiLLM(AsyncBaseLLM):
 		super().__init__(config)
 		self._client = client or genai.Client(api_key=self.config.api_key or None)
 
+	@retry(
+		reraise=True,
+		stop=stop_after_attempt(3),
+		wait=wait_exponential(multiplier=1, min=1, max=10),
+		retry=retry_if_exception_type(Exception),
+	)
 	async def __call__(self, prompt: str, **kwargs: Any) -> str:
 		'''Call the Gemini LLM asynchronously and return text.'''
 		payload: Dict[str, Any] = {
