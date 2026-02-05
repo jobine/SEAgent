@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import Any, ClassVar, Dict, Type
 from src.models.base_model import LLMConfig, AsyncBaseLLM
+from src.models.claude_model import AsyncAnthropicLLM
 from src.models.openai_model import AsyncOpenAILLM
 from src.models.ollama_model import AsyncOllamaLLM
 from src.models.gemini_model import AsyncGeminiLLM
@@ -18,6 +19,8 @@ class AsyncLLM:
 		'ollama': AsyncOllamaLLM,
 		'gemini': AsyncGeminiLLM,
 		'google': AsyncGeminiLLM,
+		'claude': AsyncAnthropicLLM,
+		'anthropic': AsyncAnthropicLLM,
 	}
 
 	def __new__(
@@ -63,14 +66,19 @@ if __name__ == '__main__':
 	import asyncio
 
 	async def main():
-		# OpenAI example
-		openai_llm = AsyncLLM('gpt-4o-mini')
-		result = await openai_llm('Hello, OpenAI!')
-		print(result)
+		# # OpenAI example
+		# openai_llm = AsyncLLM('gpt-4o-mini')
+		# result = await openai_llm('Hello, OpenAI!')
+		# print(result)
 
-		# Gemini example (uncomment if configured)
-		gemini_llm = AsyncLLM('gemini-3-pro-preview')
-		result = await gemini_llm('Hello, Gemini!')
+		# # Gemini example (uncomment if configured)
+		# gemini_llm = AsyncLLM('gemini-3-pro-preview')
+		# result = await gemini_llm('Hello, Gemini!')
+		# print(result)
+
+		# Claude example (uncomment if configured)
+		claude_llm = AsyncLLM('claude-opus-4-5')
+		result = await claude_llm('Hello, Claude!')
 		print(result)
 
 	asyncio.run(main())

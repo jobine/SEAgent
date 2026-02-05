@@ -15,6 +15,7 @@ dependencies = [
     "ollama",
     "google-genai",
     "google-genai[aiohttp]",
+    "anthropic",
     "pydantic>=2.0.0",
 ]
 

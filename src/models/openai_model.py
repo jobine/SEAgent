@@ -26,8 +26,8 @@ class AsyncOpenAILLM(AsyncBaseLLM):
 			'model': self.config.name,
 			'messages': [{'role': 'user', 'content': prompt}],
 			'temperature': self.config.temperature,
-			'top_p': self.config.top_p,
 		}
+		
 		payload_override: Dict[str, Any] = kwargs.pop('payload_override', {})
 		payload.update(payload_override)
 

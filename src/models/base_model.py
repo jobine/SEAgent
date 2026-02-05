@@ -15,7 +15,6 @@ class LLMConfig:
 	base_url: str
 	api_key: str
 	temperature: float | None = None
-	top_p: float | None = None
 	_file_cache: ClassVar[Dict[Path, Dict[str, Dict[str, Any]]]] = {}
 	_instance_cache: ClassVar[Dict[tuple[Path, str], 'LLMConfig']] = {}
 
@@ -52,8 +51,7 @@ class LLMConfig:
 			description=entry.get('description', ''),
 			base_url=entry.get('base_url', ''),
 			api_key=entry.get('api_key', ''),
-			temperature=entry.get('temperature', 0.7),
-			top_p=entry.get('top_p', 1.0),
+			temperature=entry.get('temperature', 1.0),
 		)
 		cls._instance_cache[cache_key] = instance
 		return instance

@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from ollama import AsyncClient as AsyncOllama
@@ -25,7 +26,6 @@ class AsyncOllamaLLM(AsyncBaseLLM):
 				host = self.config.base_url.rstrip('/').removesuffix('/v1')
 			
 			# Set NO_PROXY to bypass system proxy for localhost
-			import os
 			no_proxy = os.environ.get('NO_PROXY', '')
 			if 'localhost' not in no_proxy and '127.0.0.1' not in no_proxy:
 				entries = [e for e in no_proxy.split(',') if e]
@@ -34,20 +34,13 @@ class AsyncOllamaLLM(AsyncBaseLLM):
 			
 			self._client = AsyncOllama(host=host)
 
-	@retry(
-		reraise=True,
-		stop=stop_after_attempt(3),
-		wait=wait_exponential(multiplier=1, min=1, max=10),
-		retry=retry_if_exception_type(Exception),
-	)
+	@retry(reraise=True, stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=1, max=10), retry=retry_if_exception_type(Exception))
 	async def __call__(self, prompt: str, **kwargs: Any) -> str:
 		'''Call Ollama LLM asynchronously using official SDK and return text.'''
 		# Build options dict for Ollama
 		options: Dict[str, Any] = {}
 		if self.config.temperature is not None:
 			options['temperature'] = self.config.temperature
-		if self.config.top_p is not None:
-			options['top_p'] = self.config.top_p
 		
 		# Allow override from kwargs
 		options_override: Dict[str, Any] = kwargs.pop('options', {})

@@ -33,8 +33,6 @@ class AsyncGeminiLLM(AsyncBaseLLM):
 		config_dict: Dict[str, Any] = {}
 		if self.config.temperature is not None:
 			config_dict['temperature'] = self.config.temperature
-		if self.config.top_p is not None:
-			config_dict['top_p'] = self.config.top_p
 
 		payload_override: Dict[str, Any] = kwargs.pop('payload_override', {})
 		config_dict.update(payload_override.pop('config', {}))
