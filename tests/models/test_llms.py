@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-import src.models.llms as llms
-from src.models.llms import (
+import src.models.models as models
+from src.models.models import (
     AsyncBaseLLM,
     AsyncGeminiLLM,
     AsyncLLM,
@@ -42,11 +42,11 @@ def _write_config(tmp_path: Path, provider: str = 'openai') -> Path:
 @pytest.fixture(autouse=True)
 def reset_llmconfig_cache():
     '''Clear caches before and after each test to avoid cross-test coupling.'''
-    llms.LLMConfig._file_cache.clear()
-    llms.LLMConfig._instance_cache.clear()
+    models.LLMConfig._file_cache.clear()
+    models.LLMConfig._instance_cache.clear()
     yield
-    llms.LLMConfig._file_cache.clear()
-    llms.LLMConfig._instance_cache.clear()
+    models.LLMConfig._file_cache.clear()
+    models.LLMConfig._instance_cache.clear()
 
 
 # =============================================================================
@@ -80,15 +80,15 @@ def test_llmconfig_caches_json_load(monkeypatch, tmp_path: Path) -> None:
     config_path = tmp_path / 'models.json'
     config_path.write_text(json.dumps(data), encoding='utf-8')
 
-    original_load = llms.json.load
+    original_load = models.json.load
     calls = {'count': 0}
 
     def fake_load(fp):
         calls['count'] += 1
         return original_load(fp)
 
-    monkeypatch.setattr(llms, 'json', llms.json)
-    monkeypatch.setattr(llms.json, 'load', fake_load)
+    monkeypatch.setattr(models, 'json', models.json)
+    monkeypatch.setattr(models.json, 'load', fake_load)
 
     LLMConfig.load('a', path=config_path)
     LLMConfig.load('b', path=config_path)

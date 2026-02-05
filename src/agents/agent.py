@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 
 from pydantic import BaseModel, Field, ConfigDict, PrivateAttr
 
-from src.models.llms import AsyncLLM, AsyncBaseLLM
+from src.models.models import AsyncLLM, AsyncBaseLLM
 
 
 class AgentConfig(BaseModel):
