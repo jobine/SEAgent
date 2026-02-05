@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 import src.models.models as models
+import src.models.base_model as base_model
 from src.models.models import (
     AsyncBaseLLM,
     AsyncGeminiLLM,
@@ -22,16 +23,14 @@ def _write_config(tmp_path: Path, provider: str = 'openai') -> Path:
             'description': 'demo model',
             'base_url': 'https://example.com/v1',
             'api_key': 'test-key',
-            'temperature': 0.5,
-            'top_p': 0.9
+            'temperature': 0.5
         },
         'gemini-model': {
             'provider': 'gemini',
             'description': 'gemini demo model',
             'base_url': '',
             'api_key': 'gemini-test-key',
-            'temperature': 0.7,
-            'top_p': 1.0
+            'temperature': 0.7
         }
     }
     config_path = tmp_path / 'models.json'
@@ -62,7 +61,6 @@ def test_llmconfig_loads_model(tmp_path: Path) -> None:
     assert config.provider == 'openai'
     assert config.base_url == 'https://example.com/v1'
     assert config.temperature == 0.5
-    assert config.top_p == 0.9
 
 
 def test_llmconfig_missing_model_raises(tmp_path: Path) -> None:
@@ -80,15 +78,14 @@ def test_llmconfig_caches_json_load(monkeypatch, tmp_path: Path) -> None:
     config_path = tmp_path / 'models.json'
     config_path.write_text(json.dumps(data), encoding='utf-8')
 
-    original_load = models.json.load
+    original_load = base_model.json.load
     calls = {'count': 0}
 
     def fake_load(fp):
         calls['count'] += 1
         return original_load(fp)
 
-    monkeypatch.setattr(models, 'json', models.json)
-    monkeypatch.setattr(models.json, 'load', fake_load)
+    monkeypatch.setattr(base_model.json, 'load', fake_load)
 
     LLMConfig.load('a', path=config_path)
     LLMConfig.load('b', path=config_path)
@@ -212,8 +209,6 @@ async def test_async_openai_llm_generate_uses_config(tmp_path: Path) -> None:
     assert captured['payload']['model'] == 'demo'
     assert captured['payload']['messages'] == [{'role': 'user', 'content': 'hi'}]
     assert captured['payload']['temperature'] == 0.5
-    assert captured['payload']['top_p'] == 0.9
-
 
 @pytest.mark.asyncio
 async def test_async_openai_llm_payload_override(tmp_path: Path) -> None:
@@ -447,3 +442,235 @@ def test_async_gemini_llm_extract_content_from_candidates() -> None:
 
     result = AsyncGeminiLLM._extract_content(FakeResponse())
     assert result == 'candidate text'
+
+
+# =============================================================================
+# AsyncAnthropicLLM Tests
+# =============================================================================
+
+from src.models.claude_model import AsyncAnthropicLLM
+
+
+def _write_anthropic_config(tmp_path: Path) -> Path:
+    data = {
+        'claude-model': {
+            'provider': 'anthropic',
+            'description': 'claude demo model',
+            'base_url': '',
+            'api_key': 'anthropic-test-key',
+            'temperature': 0.7
+        },
+        'claude-no-temp': {
+            'provider': 'anthropic',
+            'description': 'claude model without temperature',
+            'base_url': '',
+            'api_key': 'anthropic-test-key',
+            'temperature': None
+        }
+    }
+    config_path = tmp_path / 'models.json'
+    config_path.write_text(json.dumps(data), encoding='utf-8')
+    return config_path
+
+
+class FakeAnthropicTextBlock:
+    '''Fake Anthropic text block for testing.'''
+
+    def __init__(self, text: str):
+        self.type = 'text'
+        self.text = text
+
+
+class FakeAnthropicResponse:
+    '''Fake Anthropic response for testing.'''
+
+    def __init__(self, content: list | None = None):
+        self.content = content
+
+
+class FakeAnthropicMessages:
+    '''Fake Anthropic messages API for testing.'''
+
+    def __init__(self, response=None, error=None, captured=None):
+        self._response = response
+        self._error = error
+        self._captured = captured
+
+    async def create(self, **kwargs):
+        if self._captured is not None:
+            self._captured['payload'] = kwargs
+        if self._error:
+            raise self._error
+        return self._response
+
+
+class FakeAnthropicClient:
+    '''Fake Anthropic client for testing.'''
+
+    def __init__(self, response=None, error=None, captured=None):
+        self.messages = FakeAnthropicMessages(response=response, error=error, captured=captured)
+
+
+def test_async_llm_factory_returns_anthropic_for_anthropic_provider(tmp_path: Path) -> None:
+    config_path = _write_anthropic_config(tmp_path)
+
+    llm = AsyncLLM('claude-model', config_path=config_path)
+
+    assert isinstance(llm, AsyncAnthropicLLM)
+    assert llm.config.provider == 'anthropic'
+
+
+def test_async_llm_factory_returns_anthropic_for_claude_provider(tmp_path: Path) -> None:
+    data = {'claude-test': {'provider': 'claude', 'base_url': '', 'api_key': 'k'}}
+    config_path = tmp_path / 'models.json'
+    config_path.write_text(json.dumps(data), encoding='utf-8')
+
+    llm = AsyncLLM('claude-test', config_path=config_path)
+
+    assert isinstance(llm, AsyncAnthropicLLM)
+
+
+@pytest.mark.asyncio
+async def test_async_anthropic_llm_generate_uses_config(tmp_path: Path) -> None:
+    config_path = _write_anthropic_config(tmp_path)
+    captured: dict[str, object] = {}
+
+    client = FakeAnthropicClient(
+        response=FakeAnthropicResponse(content=[FakeAnthropicTextBlock('claude hello')]),
+        captured=captured
+    )
+    llm = AsyncLLM('claude-model', config_path=config_path, client=client)
+
+    result = await llm('hi')
+
+    assert result == 'claude hello'
+    assert captured['payload']['model'] == 'claude-model'
+    assert captured['payload']['messages'] == [{'role': 'user', 'content': 'hi'}]
+    assert captured['payload']['max_tokens'] == 4096
+    assert captured['payload']['temperature'] == 0.7
+
+
+@pytest.mark.asyncio
+async def test_async_anthropic_llm_omits_none_temperature(tmp_path: Path) -> None:
+    config_path = _write_anthropic_config(tmp_path)
+    captured: dict[str, object] = {}
+
+    client = FakeAnthropicClient(
+        response=FakeAnthropicResponse(content=[FakeAnthropicTextBlock('response')]),
+        captured=captured
+    )
+    llm = AsyncLLM('claude-no-temp', config_path=config_path, client=client)
+
+    await llm('hi')
+
+    # temperature should not be in payload when None
+    assert 'temperature' not in captured['payload']
+
+
+@pytest.mark.asyncio
+async def test_async_anthropic_llm_payload_override(tmp_path: Path) -> None:
+    config_path = _write_anthropic_config(tmp_path)
+    captured: dict[str, object] = {}
+
+    client = FakeAnthropicClient(
+        response=FakeAnthropicResponse(content=[FakeAnthropicTextBlock('response')]),
+        captured=captured
+    )
+    llm = AsyncLLM('claude-model', config_path=config_path, client=client)
+
+    await llm('hi', payload_override={'temperature': 0.9, 'max_tokens': 2048})
+
+    assert captured['payload']['temperature'] == 0.9
+    assert captured['payload']['max_tokens'] == 2048
+
+
+@pytest.mark.asyncio
+async def test_async_anthropic_llm_raises_on_error(tmp_path: Path) -> None:
+    config_path = _write_anthropic_config(tmp_path)
+
+    client = FakeAnthropicClient(error=RuntimeError('anthropic error'))
+    llm = AsyncLLM('claude-model', config_path=config_path, client=client)
+
+    with pytest.raises(RuntimeError):
+        await llm('hello')
+
+
+@pytest.mark.asyncio
+async def test_async_anthropic_llm_validates_response(tmp_path: Path) -> None:
+    config_path = _write_anthropic_config(tmp_path)
+
+    client = FakeAnthropicClient(response=FakeAnthropicResponse(content=None))
+    llm = AsyncLLM('claude-model', config_path=config_path, client=client)
+
+    with pytest.raises(ValueError):
+        await llm('hello')
+
+
+@pytest.mark.asyncio
+async def test_async_anthropic_llm_validates_empty_content(tmp_path: Path) -> None:
+    config_path = _write_anthropic_config(tmp_path)
+
+    client = FakeAnthropicClient(response=FakeAnthropicResponse(content=[]))
+    llm = AsyncLLM('claude-model', config_path=config_path, client=client)
+
+    with pytest.raises(ValueError):
+        await llm('hello')
+
+
+@pytest.mark.asyncio
+async def test_async_anthropic_llm_handles_multiple_text_blocks(tmp_path: Path) -> None:
+    config_path = _write_anthropic_config(tmp_path)
+
+    client = FakeAnthropicClient(
+        response=FakeAnthropicResponse(content=[
+            FakeAnthropicTextBlock('Hello, '),
+            FakeAnthropicTextBlock('world!')
+        ])
+    )
+    llm = AsyncLLM('claude-model', config_path=config_path, client=client)
+
+    result = await llm('hi')
+
+    assert result == 'Hello, world!'
+
+
+def test_async_anthropic_llm_extract_content_from_object() -> None:
+    response = FakeAnthropicResponse(content=[FakeAnthropicTextBlock('test content')])
+    result = AsyncAnthropicLLM._extract_content(response)
+    assert result == 'test content'
+
+
+def test_async_anthropic_llm_extract_content_from_dict() -> None:
+    response = {
+        'content': [
+            {'type': 'text', 'text': 'dict content'}
+        ]
+    }
+    result = AsyncAnthropicLLM._extract_content(response)
+    assert result == 'dict content'
+
+
+def test_async_anthropic_llm_extract_content_ignores_non_text_blocks() -> None:
+    class FakeToolUseBlock:
+        type = 'tool_use'
+        id = 'tool_123'
+        name = 'some_tool'
+
+    response = FakeAnthropicResponse(content=[
+        FakeToolUseBlock(),
+        FakeAnthropicTextBlock('actual text')
+    ])
+    result = AsyncAnthropicLLM._extract_content(response)
+    assert result == 'actual text'
+
+
+def test_async_anthropic_llm_extract_content_raises_on_no_text() -> None:
+    class FakeToolUseBlock:
+        type = 'tool_use'
+        id = 'tool_123'
+        name = 'some_tool'
+
+    response = FakeAnthropicResponse(content=[FakeToolUseBlock()])
+
+    with pytest.raises(ValueError):
+        AsyncAnthropicLLM._extract_content(response)
